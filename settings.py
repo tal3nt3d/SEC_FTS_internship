@@ -1,5 +1,5 @@
 """Application settings."""
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
 
 class Settings(BaseSettings):
@@ -9,9 +9,9 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "DEBUG"
     APP_ENV: str = "dev"
     
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(env_file='.env')
     
+    @property
     def get_safe_settings(self):
         return {
             "APP_HOST": self.APP_HOST,
@@ -24,9 +24,10 @@ class Settings(BaseSettings):
 env = os.getenv("APP_ENV", "dev")
 
 if env == "test":
-    settings = Settings(APP_HOST="127.0.0.1", APP_PORT=8001, DEBUG=False, LOG_LEVEL="INFO", APP_ENV="test")
+    env_file = ".env.test"
 elif env == "dev":
-    settings = Settings(APP_HOST="127.0.0.1", APP_PORT=8000, DEBUG=True, LOG_LEVEL="DEBUG", APP_ENV="dev")
+    env_file = ".env.dev"
 else:
-    settings = Settings()
+    env_file = ".env"
     
+settings = Settings(_env_file=env_file)
