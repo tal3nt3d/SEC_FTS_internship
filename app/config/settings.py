@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "DEBUG"
     APP_ENV: str = "dev"
     
-    model_config = SettingsConfigDict(env_file='.env')
+    model_config = SettingsConfigDict(env_file=".env")
     
     @property
     def safe_settings(self):
@@ -30,4 +30,4 @@ elif env == "dev":
 else:
     env_file = ".env"
     
-settings = Settings(_env_file=env_file)
+settings = Settings()
