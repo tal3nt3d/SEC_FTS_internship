@@ -3,10 +3,7 @@
 from fastapi import FastAPI
 import uvicorn
 from config.settings import settings
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+from config.logger import logger
 
 app = FastAPI(title="Task Tracker API")
 
