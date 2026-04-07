@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env')
     
     @property
-    def get_safe_settings(self):
+    def safe_settings(self):
         return {
             "APP_HOST": self.APP_HOST,
             "APP_PORT": self.APP_PORT,
