@@ -14,5 +14,3 @@ cp .env.dev .env
 # Запуск сервиса
 python main.py
 ```
-
-сообщение для проверки rebase
