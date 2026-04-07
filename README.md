@@ -10,7 +10,7 @@ venv\Scripts\activate  #Windows
 # Установка зависимостей
 pip install -r requirements.txt
 # Настройка переменных окружения
-cp .env.example .env
+cp .env.dev .env
 # Запуск сервиса
 python main.py
 ```
