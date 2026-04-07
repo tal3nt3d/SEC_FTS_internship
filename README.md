@@ -15,4 +15,4 @@ cp .env.dev .env
 python main.py
 ```
 
-сообщение для проверки rebase
+другое сообщение для проверки rebase
