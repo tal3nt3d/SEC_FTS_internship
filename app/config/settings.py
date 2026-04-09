@@ -1,10 +1,13 @@
 """Application settings."""
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import os
+from pathlib import Path
+
+CONFIG_DIR = Path(__file__).parent
 
 class Settings(BaseSettings):
     APP_HOST: str = "127.0.0.1"
-    APP_PORT: int = 8080
+    APP_PORT: int = 8000
     DEBUG: bool = False
     LOG_LEVEL: str = "DEBUG"
     APP_ENV: str = "dev"
@@ -13,9 +16,9 @@ class Settings(BaseSettings):
     def get_env_file():
         env = os.getenv("APP_ENV", "dev")
         if env == "test":
-            return ".env.test"
+            return CONFIG_DIR / ".env.test"
         elif env == "dev":
-            return ".env.dev"
+            return CONFIG_DIR / ".env.dev"
         return ".env"
     
     model_config = SettingsConfigDict(env_file=get_env_file())
