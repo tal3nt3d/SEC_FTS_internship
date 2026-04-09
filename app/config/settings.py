@@ -4,12 +4,21 @@ import os
 
 class Settings(BaseSettings):
     APP_HOST: str = "127.0.0.1"
-    APP_PORT: int = 8000
-    DEBUG: bool = True
+    APP_PORT: int = 8080
+    DEBUG: bool = False
     LOG_LEVEL: str = "DEBUG"
     APP_ENV: str = "dev"
     
-    model_config = SettingsConfigDict(env_file='.env')
+    @staticmethod
+    def get_env_file():
+        env = os.getenv("APP_ENV", "dev")
+        if env == "test":
+            return ".env.test"
+        elif env == "dev":
+            return ".env.dev"
+        return ".env"
+    
+    model_config = SettingsConfigDict(env_file=get_env_file())
     
     @property
     def safe_settings(self):
@@ -21,13 +30,4 @@ class Settings(BaseSettings):
             "APP_ENV": self.APP_ENV
         }
 
-env = os.getenv("APP_ENV", "dev")
-
-if env == "test":
-    env_file = ".env.test"
-elif env == "dev":
-    env_file = ".env.dev"
-else:
-    env_file = ".env"
-    
-settings = Settings(_env_file=env_file)
+settings = Settings()
