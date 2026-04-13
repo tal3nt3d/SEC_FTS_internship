@@ -3,5 +3,5 @@ from config.errors import TaskNotFoundError
 async def get_tasks():
     tasks = tasks_db
     if not tasks:
-        raise TaskNotFoundError("Tasks not found")
+        raise TaskNotFoundError()
     return tasks

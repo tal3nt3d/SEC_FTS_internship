@@ -4,5 +4,5 @@ from config.errors import UserNotFoundError
 async def get_users():
     users = users_db
     if not users:
-        raise UserNotFoundError("Users not found")
+        raise UserNotFoundError()
     return users
