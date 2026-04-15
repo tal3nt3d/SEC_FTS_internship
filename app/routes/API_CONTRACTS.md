@@ -12,6 +12,7 @@
 **Status Codes:**
 - `200 OK` - успешный ответ
 - `400 Bad Request` - неверные параметры запроса
+- `422 Unprocessable Entity` - неверные типы данных
 
 **Success Response Body (200 OK):**
 
@@ -30,11 +31,21 @@
 }
 ```
 
+**Error response:**
+```json
+{
+  "error": "BAD_REQUEST",
+  "message": "Параметр 'status' должен быть одним из: pending, in_progress, completed",
+  "timestamp": "2025-04-15T10:30:00Z"
+}
+```
+
 ## 2. GET /tasks/{task_id} - получить задачу
 
 **Status Codes:**
 - `200 OK` - успешный ответ
 - `404 Not Found` - задача не найдена
+- `422 Unprocessable Entity` - неверные типы данных
 
 **Success Response Body (200 OK):**
 ```json
@@ -47,6 +58,15 @@
   "assignee_id": null,
   "created_at": "2025-04-15T09:00:00Z",
   "updated_at": "2025-04-15T09:00:00Z"
+}
+```
+
+**Error response:**
+```json
+{
+  "error": "NOT_FOUND",
+  "message": "Задание не найдено",
+  "timestamp": "2025-04-15T10:30:00Z"
 }
 ```
 
@@ -65,6 +85,7 @@
 **Status Codes:**
 - `201 OK` - задача создана
 - `400 Bad Request` - неверные параметры запроса
+- `422 Unprocessable Entity` - неверные типы данных
 
 **Success Response Body (201 OK):**
 ```json
@@ -77,6 +98,15 @@
   "assignee_id": null,
   "created_at": "2025-04-15T10:30:00Z",
   "updated_at": "2025-04-15T10:30:00Z"
+}
+```
+
+**Error response:**
+```json
+{
+  "error": "BAD_REQUEST",
+  "message": "Параметр 'priority' должен быть одним из: low, medium, high",
+  "timestamp": "2025-04-15T10:30:00Z"
 }
 ```
 
@@ -108,6 +138,7 @@
 **Status Codes:**
 - `200 OK` - задача изменена
 - `400 Bad Request` - неверные параметры запроса
+- `422 Unprocessable Entity` - неверные типы данных
 
 **Success Response Body (201 OK):**
 ```json
@@ -120,6 +151,15 @@
   "assignee_id": null,
   "created_at": "2025-04-15T10:30:00Z",
   "updated_at": "2025-04-15T10:30:00Z"
+}
+```
+
+**Error response:**
+```json
+{
+  "error": "BAD_REQUEST",
+  "message": "Параметр 'priority' должен быть одним из: low, medium, high",
+  "timestamp": "2025-04-15T10:30:00Z"
 }
 ```
 
@@ -141,6 +181,7 @@
 - `200 OK` - задача изменена
 - `400 Bad Request` - неверные параметры запроса
 - `404 Not Found` - задача не найдена
+- `422 Unprocessable Entity` - неверные типы данных
 
 ## 6. POST /tasks/{task_id}/comments - написать комментарий к задаче
 
@@ -165,6 +206,7 @@
 - `200 OK` - комментарий добавлен
 - `400 Bad Request` - неверные параметры запроса
 - `404 Not Found` - задача не найдена
+- `422 Unprocessable Entity` - неверные типы данных
 
 ### Пример запроса
 
@@ -187,6 +229,7 @@
 
 - `200 OK` - успех
 - `404 Not Found` - задача не найдена
+- `422 Unprocessable Entity` - неверные типы данных
 
 ### Success Response Body (200 OK)
 
@@ -224,6 +267,7 @@
 - `200 OK` - успех
 - `400 OK` - задача уже в архиве
 - `404 Not Found` - задача не найдена
+- `422 Unprocessable Entity` - неверные типы данных
 
 ### Success Response Body (200 OK)
 
@@ -241,6 +285,7 @@
 ### Status Codes
 
 - `200 OK` - успех
+- `422 Unprocessable Entity` - неверные типы данных
 
 ### Success Response Body (200 OK)
 
@@ -267,6 +312,7 @@
 
 - `200 OK` - успех
 - `400 OK` - неверный формат
+- `422 Unprocessable Entity` - неверные типы данных
 
 ### Success Response Body (200 OK) для format=json
 
@@ -296,12 +342,17 @@
 | 201 | Создано |
 | 400 | Неверный запрос |
 | 404 | Не найдено |
+| 422 | Необрабатываемый объект |
 
 ## Формат ошибок
+
+Все ошибки возвращаются в едином формате:
+
 ```json
 {
   "error": "ERROR_CODE",
-  "message": "Описание ошибки"
+  "message": "Описание ошибки",
+  "timestamp": "2025-04-15T10:30:00Z"
 }
 ```
 
@@ -326,7 +377,7 @@ curl -X GET "http://api.example.com/tasks?page=2&limit=10&status=completed&prior
 ```
 
 ```bash
-curl -X GET "http://api.example.com/tasks/task_001"
+curl -X GET "http://api.example.com/tasks/001"
 #Response
 {
   "id": "001",
@@ -362,7 +413,7 @@ curl -X POST "http://api.example.com/tasks" \
 ```
 
 ```bash
-curl -X PATCH "http://api.example.com/tasks/task_101" \
+curl -X PATCH "http://api.example.com/tasks/101" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Написать финальную документацию",
@@ -382,7 +433,7 @@ curl -X PATCH "http://api.example.com/tasks/task_101" \
 ```
 
 ```bash
-curl -X POST "http://api.example.com/tasks/task_101/assign" \
+curl -X POST "http://api.example.com/tasks/101/assign" \
   -H "Content-Type: application/json" \
   -d '{
     "assignee_id": "456"
