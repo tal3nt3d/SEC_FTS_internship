@@ -6,9 +6,12 @@ from config.settings import settings
 from config.logger import logger
 from routes.routes import main_router
 
-app = FastAPI(title="Task Tracker API")
+def create_app() -> FastAPI:
+    app = FastAPI(title="Task Tracker API")
+    app.include_router(main_router)
+    return app
 
-app.include_router(main_router)
+app = create_app()
 
 if __name__ == "__main__":
     logger.info(f"Starting app in {settings.APP_ENV} mode")

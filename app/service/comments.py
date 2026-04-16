@@ -1,5 +1,5 @@
 from storage.comments import comments_db
-from config.errors import CommentNotFoundError
+from exceptions.errors import CommentNotFoundError
 
 async def get_comments():
     comments = comments_db

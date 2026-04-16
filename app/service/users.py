@@ -1,5 +1,5 @@
 from storage.users import users_db
-from config.errors import UserNotFoundError
+from exceptions.errors import UserNotFoundError
 
 async def get_users():
     users = users_db
