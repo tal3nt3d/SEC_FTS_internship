@@ -7,7 +7,6 @@
 | Parameter | Type | Required | Description | Example |
 |-----------|------|----------|-------------|---------|
 | status | string | false | Фильтр по статусу | `?status=completed` |
-| priority | string | false | Фильтр по приоритету | `?priority=high` |
 
 **Status Codes:**
 - `200 OK` - успешный ответ
@@ -17,17 +16,14 @@
 **Success Response Body (200 OK):**
 
 ```json
-{   
-  "tasks": [
-    "id": "int",
-    "title": "string",
-    "description": "string",
-    "status": "pending|in_progress|completed",
-    "priority": "low|medium|high",
-    "assignee_id": "int | null",
-    "created_at": "datetime (ISO 8601)",
-    "updated_at": "datetime (ISO 8601)"
-    ]
+{  
+  "id": "int",
+  "title": "string",
+  "description": "string",
+  "status": "pending|in_progress|completed",
+  "user_id": "int | null",
+  "created_at": "datetime (ISO 8601)",
+  "updated_at": "datetime (ISO 8601)"
 }
 ```
 
@@ -54,8 +50,7 @@
   "title": "Купить молоко",
   "description": "Купить 2 литра молока в магазине",
   "status": "pending",
-  "priority": "medium",
-  "assignee_id": null,
+  "user_id": null,
   "created_at": "2025-04-15T09:00:00Z",
   "updated_at": "2025-04-15T09:00:00Z"
 }
@@ -78,9 +73,6 @@
 |------|-----|--------------|----------|
 | title | строка | **да** | Название задачи |
 | description | строка | нет | Описание задачи |
-| priority | строка | нет | Приоритет (по умолчанию: `medium`) |
-
-**Допустимые значения priority:** `low`, `medium`, `high`
 
 **Status Codes:**
 - `201 OK` - задача создана
@@ -94,8 +86,7 @@
   "title": "Написать отчет",
   "description": "Подготовить квартальный отчет для клиента",
   "status": "pending",
-  "priority": "high",
-  "assignee_id": null,
+  "user_id": null,
   "created_at": "2025-04-15T10:30:00Z",
   "updated_at": "2025-04-15T10:30:00Z"
 }
@@ -119,7 +110,6 @@
 | title | string | Запрещено (нельзя сделать null) |
 | description | string | ✅ Очищает описание |
 | status | string | Запрещено (нельзя сделать null) |
-| priority | string | Запрещено (нельзя сделать null) |
 
 ### Request Body 
 ```json
@@ -128,8 +118,7 @@
   "title": "string",
   "description": "string",
   "status": "pending|in_progress|completed",
-  "priority": "low|medium|high",
-  "assignee_id": "int | null",
+  "user_id": "int | null",
   "created_at": "datetime (ISO 8601)",
   "updated_at": "datetime (ISO 8601)"
   }
@@ -147,8 +136,7 @@
   "title": "Написать отчет",
   "description": "Подготовить квартальный отчет для клиента",
   "status": "pending",
-  "priority": "high",
-  "assignee_id": null,
+  "user_id": null,
   "created_at": "2025-04-15T10:30:00Z",
   "updated_at": "2025-04-15T10:30:00Z"
 }
@@ -173,7 +161,7 @@
 
 ```json
 {
-  "assignee_id": "456"
+  "user_id": "456"
 }
 ```
 
@@ -189,14 +177,14 @@
 
 | Поле | Тип | Обязательный | Описание |
 |------|-----|--------------|----------|
-| author_id | string | **да** | ID автора комментария |
+| user_id | string | **да** | ID автора комментария |
 | text | string | **да** | Текст комментария (не может быть пустым) |
 
-```bash
+```json
 {
   "id": "501",
   "task_id": "101",
-  "author_id": "456",
+  "user_id": "456",
   "text": "Начал работу над задачей",
   "created_at": "2025-04-15T13:20:00Z"
 }
@@ -239,14 +227,14 @@
     {
       "id": "501",
       "task_id": "101",
-      "author_id": "456",
+      "user_id": "456",
       "text": "Начал работу над задачей",
       "created_at": "2025-04-15T13:20:00Z"
     },
     {
       "id": "502",
       "task_id": "101",
-      "author_id": "123",
+      "user_id": "123",
       "text": "Хорошо, жду результат",
       "created_at": "2025-04-15T14:00:00Z"
     }
@@ -322,15 +310,13 @@
     "id": "001",
     "title": "Завершить проект",
     "status": "completed",
-    "priority": "high",
-    "assignee_id": "123"
+    "user_id": "123"
   },
   {
     "id": "002",
     "title": "Написать отчет",
     "status": "in_progress",
-    "priority": "medium",
-    "assignee_id": null
+    "user_id": null
   }
 ]
 ```
@@ -358,7 +344,7 @@
 
 ## Примеры запросов с ответами
 ```bash
-curl -X GET "http://api.example.com/tasks?page=2&limit=10&status=completed&priority=high"
+curl -X GET "http://api.example.com/tasks?status=completed"
 #Response:
 {
   "tasks": [
@@ -367,8 +353,7 @@ curl -X GET "http://api.example.com/tasks?page=2&limit=10&status=completed&prior
       "title": "Завершить проект",
       "description": "Сдать финальную версию",
       "status": "completed",
-      "priority": "high",
-      "assignee_id": "123",
+      "user_id": "123",
       "created_at": "2025-04-10T09:00:00Z",
       "updated_at": "2025-04-14T18:30:00Z"
     }
@@ -384,8 +369,7 @@ curl -X GET "http://api.example.com/tasks/001"
   "title": "Завершить проект",
   "description": "Сдать финальную версию клиенту",
   "status": "in_progress",
-  "priority": "high",
-  "assignee_id": "123",
+  "user_id": "123",
   "created_at": "2025-04-10T09:00:00Z",
   "updated_at": "2025-04-14T15:20:00Z"
 }
@@ -396,8 +380,7 @@ curl -X POST "http://api.example.com/tasks" \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Написать документацию",
-    "description": "Добавить описание всех API методов",
-    "priority": "medium"
+    "description": "Добавить описание всех API методов"
   }'
 #Response
 {
@@ -405,8 +388,7 @@ curl -X POST "http://api.example.com/tasks" \
   "title": "Написать документацию",
   "description": "Добавить описание всех API методов",
   "status": "pending",
-  "priority": "medium",
-  "assignee_id": null,
+  "user_id": null,
   "created_at": "2025-04-15T10:30:00Z",
   "updated_at": "2025-04-15T10:30:00Z"
 }
@@ -425,8 +407,7 @@ curl -X PATCH "http://api.example.com/tasks/101" \
   "title": "Написать финальную документацию",
   "description": "Добавить описание всех API методов",
   "status": "in_progress",
-  "priority": "medium",
-  "assignee_id": null,
+  "user_id": null,
   "created_at": "2025-04-15T10:30:00Z",
   "updated_at": "2025-04-15T11:45:00Z"
 }
@@ -436,7 +417,7 @@ curl -X PATCH "http://api.example.com/tasks/101" \
 curl -X POST "http://api.example.com/tasks/101/assign" \
   -H "Content-Type: application/json" \
   -d '{
-    "assignee_id": "456"
+    "user_id": "456"
   }'
 #Response
 {
@@ -444,8 +425,7 @@ curl -X POST "http://api.example.com/tasks/101/assign" \
   "title": "Написать документацию",
   "description": "Добавить описание всех API методов",
   "status": "in_progress",
-  "priority": "medium",
-  "assignee_id": "456",
+  "user_id": "456",
   "created_at": "2025-04-15T10:30:00Z",
   "updated_at": "2025-04-15T12:00:00Z"
 }
