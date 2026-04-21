@@ -18,6 +18,9 @@ class TaskService:
         if filters.sort_by:
             reverse = filters.order == "desc"
             tasks.sort(key=lambda t: t[filters.sort_by], reverse=reverse)
+        start = filters.offset
+        end = start + filters.limit
+        tasks = tasks[start:end] #что лучше: вернуть пустой или прокинуть ошибку?
         if not tasks:
             raise TaskNotFoundError()
         return [TaskResponse(**t) for t in tasks]

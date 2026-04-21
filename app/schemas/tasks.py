@@ -10,8 +10,10 @@ class TaskStatus(str, Enum):
     ARCHIVED = "archived"
 
 class TaskModel(BaseModel):
-    title: str = Field(max_length = 20)
-    description: str = Field(max_length = 200)
+    title: str = Field(min_length=1, max_length = 20)
+    description: str = Field(min_length=1, max_length = 200)
+    
+    model_config = ConfigDict(extra="forbid")
 
 class TaskCreate(TaskModel):
     pass
@@ -22,21 +24,21 @@ class TaskResponse(TaskModel):
     user_id: int = Field(gt=0)
     created_at: datetime
     updated_at: datetime
-    
-    model_config = ConfigDict(from_attributes=True)
         
 class TaskUpdate(TaskModel):
-    title: Optional[str] = Field(None, max_length = 20)
-    description: Optional[str] = Field(None, max_length=200)
+    title: Optional[str] = Field(None, min_length=1, max_length = 20)
+    description: Optional[str] = Field(None, min_length=1, max_length=200)
     status: Optional[TaskStatus] = None 
-    
-    model_config = ConfigDict(extra="forbid")
 
 class TaskFilter(BaseModel):
     status: Optional[TaskStatus] = None
     user_id: Optional[int] = None
     sort_by: Optional[Literal["created_at", "updated_at"]] = "created_at"
     order: Optional[Literal["asc", "desc"]] = "desc"
+    limit: Optional[int] = Field(default=5, gt=0)
+    offset: Optional[int] = Field(default=0, ge=0)
+    
+    model_config = ConfigDict(extra="forbid")
     
 class TasksSummary(BaseModel):
     total: int = 0
@@ -44,3 +46,5 @@ class TasksSummary(BaseModel):
     in_progress: int = 0
     completed: int = 0
     archived: int = 0
+    
+    model_config = ConfigDict(extra="forbid")
