@@ -25,10 +25,10 @@ class CommentNotFoundError(AppException):
 class TaskAlreadyCompletedError(AppException):
     """Raised when trying to complete already completed task."""
     def __init__(self, detail: str = "Task has been already completed"):
-        super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+        super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
         
 class TaskAlreadyArchivedError(AppException):
     """Raised when trying to archive already archived task."""
     def __init__(self, detail: str = "Task has been already archived"):
-        super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+        super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
     
