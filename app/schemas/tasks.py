@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict, field_validator, ValidationInfo
 from typing import Optional, Literal
 from enum import Enum
 from datetime import datetime
@@ -24,11 +24,21 @@ class TaskResponse(TaskModel):
     user_id: int = Field(gt=0)
     created_at: datetime
     updated_at: datetime
+    
+    @field_validator("updated_at")
+    @classmethod
+    def check_datetime(cls, value: datetime, info: ValidationInfo) -> datetime:
+        if value < info.data["created_at"]:
+            raise ValueError("updated_at must be greater than created_at")
+        return value
         
-class TaskUpdate(TaskModel):
+        
+class TaskUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length = 20)
     description: Optional[str] = Field(None, min_length=1, max_length=200)
     status: Optional[TaskStatus] = None 
+    
+    model_config = ConfigDict(extra="forbid")
 
 class TaskFilter(BaseModel):
     status: Optional[TaskStatus] = None
