@@ -11,6 +11,8 @@ class TaskService:
     
     async def get_tasks(self, filters: TaskFilter):
         tasks = self.tasks_db.copy()
+        if not tasks:
+            raise TaskNotFoundError()
         if filters.status: 
             tasks = [t for t in tasks if t["status"] == filters.status]
         if filters.user_id:
@@ -20,9 +22,7 @@ class TaskService:
             tasks.sort(key=lambda t: t[filters.sort_by], reverse=reverse)
         start = filters.offset
         end = start + filters.limit
-        tasks = tasks[start:end] #что лучше: вернуть пустой или прокинуть ошибку?
-        if not tasks:
-            raise TaskNotFoundError()
+        tasks = tasks[start:end]
         return [TaskResponse(**t) for t in tasks]
 
     async def create_task(self, user_id: int, task_data: TaskCreate):

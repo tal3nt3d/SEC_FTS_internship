@@ -3,6 +3,8 @@ from typing import Optional, Literal
 from enum import Enum
 from datetime import datetime
 
+my_config = ConfigDict(extra="forbid")
+
 class TaskStatus(str, Enum):
     PENDING = "pending"
     IN_PROGRESS = "in_progress"
@@ -13,7 +15,7 @@ class TaskModel(BaseModel):
     title: str = Field(min_length=1, max_length = 20)
     description: str = Field(min_length=1, max_length = 200)
     
-    model_config = ConfigDict(extra="forbid")
+    model_config = my_config
 
 class TaskCreate(TaskModel):
     pass
@@ -32,13 +34,12 @@ class TaskResponse(TaskModel):
             raise ValueError("updated_at must be greater than created_at")
         return value
         
-        
 class TaskUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length = 20)
     description: Optional[str] = Field(None, min_length=1, max_length=200)
     status: Optional[TaskStatus] = None 
     
-    model_config = ConfigDict(extra="forbid")
+    model_config = my_config
 
 class TaskFilter(BaseModel):
     status: Optional[TaskStatus] = None
@@ -48,7 +49,7 @@ class TaskFilter(BaseModel):
     limit: Optional[int] = Field(default=5, gt=0)
     offset: Optional[int] = Field(default=0, ge=0)
     
-    model_config = ConfigDict(extra="forbid")
+    model_config = my_config
     
 class TasksSummary(BaseModel):
     total: int = 0
@@ -57,4 +58,4 @@ class TasksSummary(BaseModel):
     completed: int = 0
     archived: int = 0
     
-    model_config = ConfigDict(extra="forbid")
+    model_config = my_config
