@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.database.models import Task
+from app.database.models import Task, TaskHistory
 from datetime import datetime
 
 class TaskRepository:
@@ -55,9 +55,12 @@ class TaskRepository:
     
     def update_task(self, task_id, task_data):
         task = self.get_task(task_id)
-        task.title = task_data.title
-        task.description = task_data.description
-        task.status = task_data.status
+        if task_data.title is not None:
+            task.title = task_data.title
+        if task_data.description is not None:
+            task.description = task_data.description
+        if task_data.status is not None:
+            task.status = task_data.status
         self.db.commit()
         self.db.refresh(task)
         return task
@@ -68,3 +71,7 @@ class TaskRepository:
         self.db.commit()
         self.db.refresh(task)
         return task
+
+    def get_task_history(self, task_id: int):
+        task_history = self.db.query(TaskHistory).filter(TaskHistory.task_id == task_id).order_by(TaskHistory.changed_at.desc()).all()
+        return task_history

@@ -1,10 +1,11 @@
 from app.exceptions.errors import TaskNotFoundError, TaskAlreadyCompletedError, TaskAlreadyArchivedError
-from app.schemas.tasks import TaskCreate, TaskResponse, TaskUpdate, TaskFilter, TasksSummary
+from app.schemas.tasks import TaskCreate, TaskResponse, TaskUpdate, TaskFilter, TasksSummary, TaskHistoryResponse
 from datetime import datetime
 import csv
 from io import StringIO
 from sqlalchemy.orm import Session
 from app.repository.tasks import TaskRepository
+from app.database.models import TaskHistory
 
 class TaskService:
     def __init__(self, db: Session):
@@ -36,7 +37,15 @@ class TaskService:
         task = self.repo.get_task(task_id)
         if task.status == "completed": # правильно ли, что мы не даём изменять уже завершённые задачи?
             raise TaskAlreadyCompletedError()
+        changes = {}
+        if task_data.title is not None:
+            changes["title"] = (task.title, task_data.title)
+        if task_data.description is not None:
+            changes["description"] = (task.description, task_data.description)
+        if task_data.status is not None:
+            changes["status"] = (task.status, task_data.status)
         task = self.repo.update_task(task_id, task_data)
+        self.save_history(task_id, changes)
         return TaskResponse.model_validate(task)
     
     def complete_task(self, task_id: int):
@@ -93,4 +102,24 @@ class TaskService:
             ])
         
         return output.getvalue()
-            
+
+    def save_history(self, task_id: int, changes: dict):
+        for field, (old, new) in changes.items():
+            if old != new:
+                history = TaskHistory(
+                    task_id=task_id,
+                    field_name=field,
+                    old_value=str(old) if old is not None else None,
+                    new_value=str(new) if new is not None else None,
+                )
+                self.repo.db.add(history)
+        
+        self.repo.db.commit()
+        
+    from app.schemas.tasks import TaskHistoryResponse
+
+    def get_task_history(self, task_id: int):
+        history = self.repo.get_task_history(task_id)
+        if history is None:
+            raise TaskNotFoundError()
+        return [TaskHistoryResponse.model_validate(h) for h in history]

@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, status
 from app.service.tasks import TaskService
 from app.dependencies.tasks import get_task_service
-from app.schemas.tasks import TaskResponse, TaskCreate, TaskUpdate, TaskFilter, TasksSummary
+from app.schemas.tasks import TaskResponse, TaskCreate, TaskUpdate, TaskFilter, TasksSummary, TaskHistoryResponse
 from fastapi.responses import StreamingResponse
 
 tasks_router = APIRouter(prefix="/tasks", tags=["tasks"])
@@ -50,3 +50,7 @@ def assign_task(task_id: int, user_id: int, task_service: TaskService = Depends(
 @tasks_router.post("/{task_id}/archive", response_model=TaskResponse)
 def archive_task(task_id: int, task_service: TaskService = Depends(get_task_service)):
     return task_service.archive_task(task_id)
+
+@tasks_router.get("/tasks/{task_id}/history", response_model=list[TaskHistoryResponse])
+def get_task_history(task_id: int, task_service: TaskService = Depends(get_task_service)):
+    return task_service.get_task_history(task_id)

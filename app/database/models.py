@@ -19,6 +19,7 @@ class Task(Base):
     owner = relationship("User", foreign_keys=[owner_id], back_populates="owned_tasks")
     assignee = relationship("User", foreign_keys=[assignee_id], back_populates="assigned_tasks")
     comments = relationship("Comment", back_populates="task")
+    history = relationship("TaskHistory", back_populates="task")
     
 class Comment(Base):
     __tablename__ = "comments"
@@ -39,3 +40,15 @@ class User(Base):
     comments = relationship("Comment", back_populates="user")
     owned_tasks = relationship("Task", foreign_keys="Task.owner_id", back_populates="owner")
     assigned_tasks = relationship("Task", foreign_keys="Task.assignee_id", back_populates="assignee")
+    
+class TaskHistory(Base):
+    __tablename__ = "task_history"
+    id = Column(Integer, primary_key=True)
+    task_id = Column(Integer, ForeignKey("tasks.id"))
+    field_name = Column(String)
+    old_value = Column(String, nullable=True)
+    new_value = Column(String, nullable=True)
+    changed_at = Column(DateTime, default=datetime.now)
+    changed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    task = relationship("Task", back_populates="history")

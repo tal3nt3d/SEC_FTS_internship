@@ -61,3 +61,14 @@ class TasksSummary(BaseModel):
     archived: int = 0
     
     model_config = my_config
+    
+class TaskHistoryResponse(BaseModel):
+    id: int
+    task_id: int
+    field_name: str
+    old_value: Optional[str]
+    new_value: Optional[str]
+    changed_at: datetime
+    changed_by: Optional[int]
+
+    model_config = my_config
