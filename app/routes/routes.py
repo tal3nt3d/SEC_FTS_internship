@@ -1,9 +1,9 @@
 """First router."""
 
 from fastapi import APIRouter
-from routes.tasks import tasks_router
-from routes.comments import comments_router
-from routes.users import users_router
+from app.routes.tasks import tasks_router
+from app.routes.comments import comments_router
+from app.routes.users import users_router
 
 main_router = APIRouter()
 main_router.include_router(router=tasks_router)

@@ -3,7 +3,7 @@ from typing import Optional, Literal
 from enum import Enum
 from datetime import datetime
 
-my_config = ConfigDict(extra="forbid")
+my_config = ConfigDict(extra="forbid", from_attributes=True)
 
 class TaskStatus(str, Enum):
     PENDING = "pending"
@@ -23,9 +23,11 @@ class TaskCreate(TaskModel):
 class TaskResponse(TaskModel):
     id: int = Field(..., gt=0)
     status: TaskStatus
-    user_id: int = Field(gt=0)
+    owner_id: int = Field(gt=0)
+    assignee_id: Optional[int] = Field(None, gt=0)
     created_at: datetime
     updated_at: datetime
+    closed_at: Optional[datetime] = Field(None)
     
     @field_validator("updated_at")
     @classmethod
