@@ -24,7 +24,7 @@ class TaskService:
         return paginated_tasks
 
     def create_task(self, owner_id: int, task_data: TaskCreate):
-        task = self.repo.create_task(owner_id, task_data.title, task_data.description)
+        task = self.repo.create_task(owner_id, task_data)
         return TaskResponse.model_validate(task)
 
     def get_task_by_id(self, task_id: int):

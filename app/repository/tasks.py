@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.database.models import Task, TaskHistory
 from datetime import datetime
+from app.schemas.tasks import TaskCreate, TaskUpdate
 
 class TaskRepository:
     def __init__(self, db: Session):
@@ -20,11 +21,11 @@ class TaskRepository:
             
         return query.all()
     
-    def create_task(self, owner_id: int, title: str, description: str):
+    def create_task(self, owner_id: int, task_data: TaskCreate):
         task = Task(
             owner_id=owner_id,
-            title=title,
-            description=description,
+            title=task_data.title,
+            description=task_data.description,
             status="pending",
             created_at=datetime.now(),
             updated_at=datetime.now()
@@ -53,7 +54,7 @@ class TaskRepository:
         self.db.refresh(task)
         return task
     
-    def update_task(self, task_id, task_data):
+    def update_task(self, task_id: int, task_data: TaskUpdate):
         task = self.get_task(task_id)
         if task_data.title is not None:
             task.title = task_data.title
@@ -65,7 +66,7 @@ class TaskRepository:
         self.db.refresh(task)
         return task
     
-    def assign_task(self, task_id, user_id):
+    def assign_task(self, task_id: int, user_id: int):
         task = self.get_task(task_id)
         task.assignee_id = user_id
         self.db.commit()
