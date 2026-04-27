@@ -17,5 +17,5 @@ class UserService:
         return UserResponse.model_validate(user_db)
     
     def create_user(self, user_data: UserCreate):
-        user_db = self.db.create_user(user_data.username, user_data.password)
+        user_db = self.db.create_user(user_data)
         return UserResponse.model_validate(user_db)

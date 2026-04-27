@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.database.models import Comment
 from datetime import datetime
+from app.schemas.comments import CommentCreate
 
 class CommentRepository:
     def __init__(self, db: Session):
@@ -13,11 +14,11 @@ class CommentRepository:
         comments = self.db.query(Comment).filter(Comment.task_id == task_id)
         return comments
     
-    def create_comment(self, task_id: int, content: str, user_id: int):
+    def create_comment(self, task_id: int, comment_data: CommentCreate):
         comment = Comment(
-            content=content,
+            content=comment_data.content,
             task_id=task_id,
-            user_id=user_id
+            user_id=comment_data.user_id
         )
         self.db.add(comment)
         self.db.commit()

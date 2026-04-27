@@ -19,5 +19,5 @@ class CommentService:
         return comment
     
     def create_comment(self, task_id: int, comment_data: CommentCreate):
-        comment = self.repo.create_comment(task_id, comment_data.content, comment_data.user_id)
+        comment = self.repo.create_comment(task_id, comment_data)
         return comment

@@ -39,35 +39,32 @@ class TaskRepository:
         task = self.db.query(Task).filter(Task.id == task_id).first()
         return task
     
-    def complete_task(self, task_id: int):
-        task = self.get_task(task_id)
+    def complete_task(self, task: Task):
         task.status = "completed"
         task.closed_at = datetime.now()
         self.db.commit()
         self.db.refresh(task)
         return task
     
-    def archive_task(self, task_id: int):
-        task = self.get_task(task_id)
+    def archive_task(self, task: Task):
         task.status = "archived"
         self.db.commit()
         self.db.refresh(task)
         return task
     
-    def update_task(self, task_id: int, task_data: TaskUpdate):
-        task = self.get_task(task_id)
+    def update_task(self, task: Task, task_data: TaskUpdate):
         if task_data.title is not None:
             task.title = task_data.title
         if task_data.description is not None:
             task.description = task_data.description
         if task_data.status is not None:
             task.status = task_data.status
+        task.updated_at = datetime.now()
         self.db.commit()
         self.db.refresh(task)
         return task
     
-    def assign_task(self, task_id: int, user_id: int):
-        task = self.get_task(task_id)
+    def assign_task(self, task: Task, user_id: int):
         task.assignee_id = user_id
         self.db.commit()
         self.db.refresh(task)

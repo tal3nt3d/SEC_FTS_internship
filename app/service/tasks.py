@@ -5,7 +5,7 @@ import csv
 from io import StringIO
 from sqlalchemy.orm import Session
 from app.repository.tasks import TaskRepository
-from app.database.models import TaskHistory
+from app.database.models import Task, TaskHistory
 
 class TaskService:
     def __init__(self, db: Session):
@@ -27,48 +27,52 @@ class TaskService:
         task = self.repo.create_task(owner_id, task_data)
         return TaskResponse.model_validate(task)
 
-    def get_task_by_id(self, task_id: int):
+    def get_task_or_404(self, task_id: int):
         task = self.repo.get_task(task_id)
         if not task:
             raise TaskNotFoundError()
+        return task
+
+    def get_task_by_id(self, task_id: int):
+        task = self.get_task_or_404(task_id)
         return TaskResponse.model_validate(task)
     
-    def update_task(self, task_id: int, task_data: TaskUpdate):
-        task = self.repo.get_task(task_id)
-        if task.status == "completed": # правильно ли, что мы не даём изменять уже завершённые задачи?
+    def is_complete(self, task: Task):
+        if task.status == "completed":
             raise TaskAlreadyCompletedError()
+    
+    def update_task(self, task_id: int, task_data: TaskUpdate):
+        task_db = self.get_task_or_404(task_id)
+        self.is_complete(task_db)
         changes = {}
         if task_data.title is not None:
-            changes["title"] = (task.title, task_data.title)
+            changes["title"] = (task_db.title, task_data.title)
         if task_data.description is not None:
-            changes["description"] = (task.description, task_data.description)
+            changes["description"] = (task_db.description, task_data.description)
         if task_data.status is not None:
-            changes["status"] = (task.status, task_data.status)
-        task = self.repo.update_task(task_id, task_data)
+            changes["status"] = (task_db.status, task_data.status)
+        task = self.repo.update_task(task_db, task_data)
         self.save_history(task_id, changes)
         return TaskResponse.model_validate(task)
     
     def complete_task(self, task_id: int):
-        task = self.get_task_by_id(task_id)
-        if task.status == "completed": # --//--
-            raise TaskAlreadyCompletedError()
-        task = self.repo.complete_task(task_id)
+        task_db = self.get_task_or_404(task_id)
+        self.is_complete(task_db)
+        task = self.repo.complete_task(task_db)
         return TaskResponse.model_validate(task)
     
     def archive_task(self, task_id: int):
-        task = self.get_task_by_id(task_id)
-        if task.status == "completed": # --//--
-            raise TaskAlreadyCompletedError()
-        if task.status == "archived":
+        task_db = self.get_task_or_404(task_id)
+        self.is_complete(task_db)
+        if task_db.status == "archived":
             raise TaskAlreadyArchivedError()
-        task = self.repo.archive_task(task_id)
+        task = self.repo.archive_task(task_db)
         return TaskResponse.model_validate(task)
     
     def assignee_task(self, task_id: int, user_id: int):
-        task = self.get_task_by_id(task_id)
-        if task.status == "completed": # --//--
-            raise TaskAlreadyCompletedError()
-        task = self.repo.assign_task(task_id, user_id)
+        task_db = self.get_task_or_404(task_id)
+        self.is_complete(task_db)
+        task = self.repo.assign_task(task_db, user_id)
         return TaskResponse.model_validate(task)
     
     def get_summary(self):
