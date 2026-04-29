@@ -15,8 +15,13 @@ cp .env.dev .env
 python main.py
 ```
 
+## Запуск через Docker
+
 ```bash
-docker compose up --build -d # сборка контейнеров
-docker compose down # разборка контейнера
-docker compose --profile test run --rm test # запуск тестов 
+ # Сборка контейнеров
+docker compose up --build -d
+# Разборка контейнеров
+docker compose down 
+# Запуск тестов 
+docker compose --profile test run --rm test 
 ```

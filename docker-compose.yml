@@ -26,19 +26,29 @@ services:
       - .env
     restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - APP_ENV=dev
     ports:
       - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   test:
     build: .
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     command: pytest
     profiles:
       - test
+    environment:
+      - APP_ENV=test
+      - TESTING=1
 
 volumes:
   postgres_data:
