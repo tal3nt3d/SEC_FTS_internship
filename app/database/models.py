@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, CheckConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from .database import Base
@@ -16,10 +16,14 @@ class Task(Base):
     owner_id = Column(Integer, ForeignKey("users.id"))
     assignee_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
-    owner = relationship("User", foreign_keys=[owner_id], back_populates="owned_tasks")
-    assignee = relationship("User", foreign_keys=[assignee_id], back_populates="assigned_tasks")
+    owner = relationship("User", foreign_keys="Task.owner_id", back_populates="owned_tasks")
+    assignee = relationship("User", foreign_keys="Task.assignee_id", back_populates="assigned_tasks")
     comments = relationship("Comment", back_populates="task")
     history = relationship("TaskHistory", back_populates="task")
+    
+    __table_args__ = (
+        CheckConstraint("status IN ('pending', 'in_progress', 'archived', 'completed')", name="check_status"),
+    )
     
 class Comment(Base):
     __tablename__ = "comments"
