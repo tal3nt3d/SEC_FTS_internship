@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 
 class CommentModel(BaseModel):
-    text: str = Field(..., min_length=1, max_length=1000)
+    content: str = Field(..., min_length=1, max_length=1000)
     user_id: int = Field(..., gt=0)
     
 class CommentCreate(CommentModel):

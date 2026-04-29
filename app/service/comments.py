@@ -1,30 +1,23 @@
-from storage.comments import comments_db
-from storage.tasks import tasks_db
-from exceptions.errors import TaskNotFoundError, CommentNotFoundError
-from schemas.comments import CommentCreate, CommentResponse
+from app.exceptions.errors import TaskNotFoundError, CommentNotFoundError
+from app.schemas.comments import CommentCreate, CommentResponse
 from datetime import datetime
+from sqlalchemy.orm import Session
+from app.repository.comments import CommentRepository
 
 class CommentService:
-    def __init__(self):
-        self.comments_db = comments_db
-        self.tasks_db = tasks_db
+    def __init__(self, db: Session):
+        self.repo = CommentRepository(db)
     
-    async def create_comment(self, task_id: int, comment_data: CommentCreate):
-        task_exists = any(t["id"] == task_id for t in self.tasks_db)
-        if not task_exists:
-            raise TaskNotFoundError()
-        comment_dict = CommentResponse(
-            id=len(self.comments_db) + 1,
-            task_id=task_id,
-            text=comment_data.text,
-            user_id=comment_data.user_id
-        )
-        self.comments_db.append(comment_dict.model_dump())
-        return comment_dict
+    def get_comments(self):
+        comments = self.repo.get_all()
+        return comments
     
-    async def get_comments(self, task_id: int):
-        task_exists = any(t["id"] == task_id for t in self.tasks_db)
-        if not task_exists:
-            raise TaskNotFoundError()
-        comments = [c for c in self.comments_db if c["task_id"] == task_id]
-        return [CommentResponse(**c) for c in comments]
+    def get_comments_by_task_id(self, task_id: int):
+        comment = self.repo.get_comments(task_id)
+        if not comment:
+            raise CommentNotFoundError()
+        return comment
+    
+    def create_comment(self, task_id: int, comment_data: CommentCreate):
+        comment = self.repo.create_comment(task_id, comment_data)
+        return comment
