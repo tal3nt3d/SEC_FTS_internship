@@ -25,3 +25,12 @@ if __name__ == "__main__":
     logger.info(f"Starting app in {settings.APP_ENV} mode")
     logger.info(f"Starting with settings: %s", settings.safe_settings)
     uvicorn.run("main:app", host=settings.APP_HOST, port=settings.APP_PORT, reload=settings.DEBUG)    
+
+from fastapi.testclient import TestClient
+
+client = TestClient(app)
+
+def test_health():
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
