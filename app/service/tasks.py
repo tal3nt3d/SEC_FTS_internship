@@ -76,14 +76,13 @@ class TaskService:
         return TaskResponse.model_validate(task)
     
     def get_summary(self):
-        tasks = self.get_tasks(TaskFilter())
+        db_summary = self.repo.get_summary()
         summary = TasksSummary(
-            total=len(tasks),
-            pending=sum(1 for t in tasks if t.status == "pending"),
-            in_progress=sum(1 for t in tasks if t.status == "in_progress"),
-            completed=sum(1 for t in tasks if t.status == "completed"),
-            archived=sum(1 for t in tasks if t.status == "archived")
-            
+            total=sum(row[1] for row in db_summary),
+            pending=sum(row[1] for row in db_summary if row[0] == "pending"),
+            in_progress=sum(row[1] for row in db_summary if row[0] == "in_progress"),
+            completed=sum(row[1] for row in db_summary if row[0] == "completed"),
+            archived=sum(row[1] for row in db_summary if row[0] == "archived")
         )
         return summary
     

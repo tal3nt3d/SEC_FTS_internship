@@ -1,3 +1,4 @@
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from app.database.models import Task, TaskHistory
 from datetime import datetime
@@ -8,19 +9,20 @@ class TaskRepository:
         self.db = db
 
     def get_all(self, status: str = None, user_id: int = None, sort_by: str = None, order: str = "asc"):
-        query = self.db.query(Task)
-        
+        sql = """ SELECT * FROM tasks WHERE 1=1 """
+        params = {}
         if status:
-            query = query.filter(Task.status == status)
+            sql += """ AND status = :status """
+            params["status"] = status
         if user_id:
-            query = query.filter(Task.owner_id == user_id)
-            
-        if sort_by and hasattr(Task, sort_by):
-            column = getattr(Task, sort_by)
-            query = query.order_by(column.desc() if order == "desc" else column.asc())
-            
-        return query.all()
-    
+            sql += """ AND owner_id = :user_id """
+            params["user_id"] = user_id
+        if sort_by and sort_by in ["created_at", "updated_at"]:
+            direction = " DESC " if order == "desc" else " ASC "
+            sql += f" ORDER BY {sort_by} {direction}"
+        result = self.db.execute(text(sql), params)
+        return result.fetchall()
+
     def create_task(self, owner_id: int, task_data: TaskCreate):
         task = Task(
             owner_id=owner_id,
@@ -73,3 +75,8 @@ class TaskRepository:
     def get_task_history(self, task_id: int):
         task_history = self.db.query(TaskHistory).filter(TaskHistory.task_id == task_id).order_by(TaskHistory.changed_at.desc()).all()
         return task_history
+    
+    def get_summary(self):
+        sql = """ SELECT status, COUNT(*) as count FROM tasks GROUP BY status """
+        result = self.db.execute(text(sql))
+        return result.fetchall()
