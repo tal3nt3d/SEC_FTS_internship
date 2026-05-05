@@ -9,13 +9,17 @@ class TaskRepository:
         self.db = db
 
     def get_all(self, status: str = None, user_id: int = None, sort_by: str = None, order: str = "asc"):
-        sql = """ SELECT * FROM tasks WHERE 1=1 """
+        sql = " SELECT * FROM tasks " 
         params = {}
+        if status or user_id:
+            sql += " WHERE "
         if status:
-            sql += """ AND status = :status """
+            sql += " status = :status "
             params["status"] = status
+        if status and user_id:
+            sql += " AND "
         if user_id:
-            sql += """ AND owner_id = :user_id """
+            sql += " owner_id = :user_id "
             params["user_id"] = user_id
         if sort_by and sort_by in ["created_at", "updated_at"]:
             direction = " DESC " if order == "desc" else " ASC "
