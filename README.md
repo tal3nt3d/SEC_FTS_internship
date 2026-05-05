@@ -18,8 +18,12 @@ python main.py
 ## Запуск через Docker
 
 ```bash
- # Сборка контейнеров
+# Сборка контейнеров
 docker compose up --build -d
+# Автоматическая генерация миграции
+alembic revision --autogenerate -m "описание изменений"
+# Применение миграций Alembic
+alembic upgrade head
 # Разборка контейнеров
 docker compose down 
 # Запуск тестов 
