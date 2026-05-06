@@ -9,23 +9,18 @@ class TaskRepository:
         self.db = db
 
     def get_all(self, status: str = None, user_id: int = None, sort_by: str = None, order: str = "asc"):
-        sql = " SELECT * FROM tasks " 
-        params = {}
-        if status or user_id:
-            sql += " WHERE "
+        query = self.db.query(Task)
+        
         if status:
-            sql += " status = :status "
-            params["status"] = status
-        if status and user_id:
-            sql += " AND "
+            query = query.filter(Task.status == status)
         if user_id:
-            sql += " owner_id = :user_id "
-            params["user_id"] = user_id
-        if sort_by and sort_by in ["created_at", "updated_at"]:
-            direction = " DESC " if order == "desc" else " ASC "
-            sql += f" ORDER BY {sort_by} {direction}"
-        result = self.db.execute(text(sql), params)
-        return result.fetchall()
+            query = query.filter(Task.owner_id == user_id)
+            
+        if sort_by and hasattr(Task, sort_by):
+            column = getattr(Task, sort_by)
+            query = query.order_by(column.desc() if order == "desc" else column.asc())
+            
+        return query.all()
 
     def create_task(self, owner_id: int, task_data: TaskCreate):
         task = Task(
