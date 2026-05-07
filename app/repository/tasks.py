@@ -1,7 +1,8 @@
 from sqlalchemy import text
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 from app.database.models import Task, TaskHistory
 from datetime import datetime
+from app.exceptions.errors import TaskNotFoundError
 from app.schemas.tasks import TaskCreate, TaskUpdate
 
 class TaskRepository:
@@ -37,7 +38,7 @@ class TaskRepository:
         return task
     
     def get_task(self, task_id: int):
-        task = self.db.query(Task).filter(Task.id == task_id).first()
+        task = self.db.query(Task).options(joinedload(Task.owner), joinedload(Task.assignee), selectinload(Task.comments)).filter(Task.id == task_id).first()
         return task
     
     def complete_task(self, task: Task):
@@ -71,7 +72,7 @@ class TaskRepository:
         self.db.refresh(task)
         return task
 
-    def get_task_history(self, task_id: int):
+    def get_task_history(self, task_id: int): 
         task_history = self.db.query(TaskHistory).filter(TaskHistory.task_id == task_id).order_by(TaskHistory.changed_at.desc()).all()
         return task_history
     
