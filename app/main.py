@@ -5,15 +5,17 @@ import uvicorn
 from app.config.settings import settings
 from app.config.logger import logger
 from app.routes.routes import main_router
-from app.exceptions.handler import validation_exception_handler, app_exception_handler
+from app.exceptions.handler import validation_exception_handler, app_exception_handler, integrity_exception_handler
 from app.exceptions.errors import AppException
 from fastapi.exceptions import RequestValidationError
+from sqlalchemy.exc import IntegrityError
 
 def create_app() -> FastAPI:
     app = FastAPI(title="Task Tracker API")
     app.include_router(main_router)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
     app.add_exception_handler(AppException, app_exception_handler)
+    app.add_exception_handler(IntegrityError, integrity_exception_handler)
     return app
 
 app = create_app()

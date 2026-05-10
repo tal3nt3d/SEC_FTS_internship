@@ -1,15 +1,17 @@
-from app.exceptions.errors import TaskNotFoundError, TaskAlreadyCompletedError, TaskAlreadyArchivedError
+from app.exceptions.errors import TaskNotFoundError, TaskAlreadyCompletedError, TaskAlreadyArchivedError, UserNotFoundError
 from app.schemas.tasks import TaskCreate, TaskResponse, TaskUpdate, TaskFilter, TasksSummary, TaskHistoryResponse
 from datetime import datetime
 import csv
 from io import StringIO
 from sqlalchemy.orm import Session
 from app.repository.tasks import TaskRepository
+from app.repository.users import UserRepository
 from app.database.models import Task, TaskHistory
 
 class TaskService:
     def __init__(self, db: Session):
         self.repo = TaskRepository(db)
+        self.user_repo = UserRepository(db)
     
     def get_tasks(self, filters: TaskFilter):
         tasks = self.repo.get_all(
@@ -23,7 +25,13 @@ class TaskService:
         paginated_tasks = tasks[start:end]
         return paginated_tasks
 
+    def is_user_exists(self, user_id: int):
+        user = self.user_repo.get_user_by_id(user_id)
+        if not user:
+            raise UserNotFoundError()
+
     def create_task(self, owner_id: int, task_data: TaskCreate):
+        self.is_user_exists(owner_id)
         task = self.repo.create_task(owner_id, task_data)
         return TaskResponse.model_validate(task)
 
@@ -72,6 +80,7 @@ class TaskService:
     def assignee_task(self, task_id: int, user_id: int):
         task_db = self.get_task_or_404(task_id)
         self.is_complete(task_db)
+        self.is_user_exists(user_id)
         task = self.repo.assign_task(task_db, user_id)
         return TaskResponse.model_validate(task)
     
@@ -123,6 +132,6 @@ class TaskService:
 
     def get_task_history(self, task_id: int):
         history = self.repo.get_task_history(task_id)
-        if history is None:
+        if history == []:
             raise TaskNotFoundError()
         return [TaskHistoryResponse.model_validate(h) for h in history]
