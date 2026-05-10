@@ -51,6 +51,6 @@ def assign_task(task_id: int, user_id: int, task_service: TaskService = Depends(
 def archive_task(task_id: int, task_service: TaskService = Depends(get_task_service)):
     return task_service.archive_task(task_id)
 
-@tasks_router.get("/tasks/{task_id}/history", response_model=list[TaskHistoryResponse])
+@tasks_router.get("/{task_id}/history", response_model=list[TaskHistoryResponse])
 def get_task_history(task_id: int, task_service: TaskService = Depends(get_task_service)):
     return task_service.get_task_history(task_id)
