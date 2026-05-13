@@ -3,8 +3,7 @@ from tests import *
 pytestmark = pytest.mark.history
 
 class TestTaskHistoryRecording:
-    def test_update_task_title_creates_history_record(self, db_session: Session, sample_task):
-        service = TaskService(db_session)
+    def test_update_task_title_creates_history_record(self, db_session: Session, sample_task, task_service):
         
         history_before = db_session.query(TaskHistory).filter(
             TaskHistory.task_id == sample_task.id
@@ -12,7 +11,7 @@ class TestTaskHistoryRecording:
         assert len(history_before) == 0
         
         update_data = TaskUpdate(title="New Updated Title")
-        service.update_task(sample_task.id, update_data)
+        task_service.update_task(sample_task.id, update_data)
         
         history_after = db_session.query(TaskHistory).filter(
             TaskHistory.task_id == sample_task.id
@@ -27,12 +26,11 @@ class TestTaskHistoryRecording:
         assert history_record.new_value == sample_task.title
         assert history_record.changed_at is not None
     
-    def test_update_task_description_creates_history_record(self, db_session: Session, sample_task):
-        service = TaskService(db_session)
+    def test_update_task_description_creates_history_record(self, db_session: Session, sample_task, task_service):
         original_description = sample_task.description
         
         update_data = TaskUpdate(description="Brand new description")
-        service.update_task(sample_task.id, update_data)
+        task_service.update_task(sample_task.id, update_data)
         
         history = db_session.query(TaskHistory).filter(
             TaskHistory.task_id == sample_task.id,
@@ -43,11 +41,10 @@ class TestTaskHistoryRecording:
         assert history.old_value == original_description
         assert history.new_value == "Brand new description"
     
-    def test_update_task_status_creates_history_record(self, db_session: Session, sample_task):
-        service = TaskService(db_session)
-        
+    def test_update_task_status_creates_history_record(self, db_session: Session, sample_task, task_service):
+
         update_data = TaskUpdate(status="in_progress")
-        service.update_task(sample_task.id, update_data)
+        task_service.update_task(sample_task.id, update_data)
         
         history = db_session.query(TaskHistory).filter(
             TaskHistory.task_id == sample_task.id,
@@ -58,8 +55,7 @@ class TestTaskHistoryRecording:
         assert history.old_value == "pending"
         assert "in_progress" in history.new_value.lower()
     
-    def test_update_multiple_fields_creates_multiple_history_records(self, db_session: Session, sample_task):
-        service = TaskService(db_session)
+    def test_update_multiple_fields_creates_multiple_history_records(self, db_session: Session, sample_task, task_service):
         original_title = sample_task.title
         original_description = sample_task.description
         
@@ -67,7 +63,7 @@ class TestTaskHistoryRecording:
             title="New Title",
             description="New Description"
         )
-        service.update_task(sample_task.id, update_data)
+        task_service.update_task(sample_task.id, update_data)
         
         history_records = db_session.query(TaskHistory).filter(
             TaskHistory.task_id == sample_task.id
@@ -86,12 +82,11 @@ class TestTaskHistoryRecording:
         assert desc_record.old_value == original_description
         assert desc_record.new_value == "New Description"
     
-    def test_history_records_are_ordered_by_changed_at(self, db_session: Session, sample_task):
-        service = TaskService(db_session)
+    def test_history_records_are_ordered_by_changed_at(self, db_session: Session, sample_task, task_service):
         
-        service.update_task(sample_task.id, TaskUpdate(title="Title v1"))
-        service.update_task(sample_task.id, TaskUpdate(description="Desc v1"))
-        service.update_task(sample_task.id, TaskUpdate(title="Title v2"))
+        task_service.update_task(sample_task.id, TaskUpdate(title="Title v1"))
+        task_service.update_task(sample_task.id, TaskUpdate(description="Desc v1"))
+        task_service.update_task(sample_task.id, TaskUpdate(title="Title v2"))
         
         history = db_session.query(TaskHistory).filter(
             TaskHistory.task_id == sample_task.id
@@ -100,12 +95,12 @@ class TestTaskHistoryRecording:
         assert len(history) == 3
         assert history[0].new_value == "Title v2"
     
-    def test_no_history_record_when_value_unchanged(self, db_session: Session, sample_task):
-        service = TaskService(db_session)
+    def test_no_history_record_when_value_unchanged(self, db_session: Session, sample_task, task_service):
+
         original_title = sample_task.title
         
         update_data = TaskUpdate(title=original_title)
-        service.update_task(sample_task.id, update_data)
+        task_service.update_task(sample_task.id, update_data)
         
         history = db_session.query(TaskHistory).filter(
             TaskHistory.task_id == sample_task.id
@@ -114,8 +109,7 @@ class TestTaskHistoryRecording:
         assert len(history) == 0
     
     def test_history_contains_none_values_for_optional_fields(self, db_session: Session, sample_task):
-        service = TaskService(db_session)
-
+        
         from app.database.models import TaskHistory
         
         history_record = TaskHistory(
@@ -136,11 +130,10 @@ class TestTaskHistoryRecording:
     
     
 class TestTaskHistoryEndpoint:
-    def test_get_task_history_returns_records(self, db_session: Session, client, sample_task):
-        service = TaskService(db_session)
+    def test_get_task_history_returns_records(self, db_session: Session, client, sample_task, task_service):
         
-        service.update_task(sample_task.id, TaskUpdate(title="First Update"))
-        service.update_task(sample_task.id, TaskUpdate(description="Second Update"))
+        task_service.update_task(sample_task.id, TaskUpdate(title="First Update"))
+        task_service.update_task(sample_task.id, TaskUpdate(description="Second Update"))
         
         response = client.get(f"/tasks/{sample_task.id}/history")
         

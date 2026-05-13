@@ -24,12 +24,8 @@ class TestCompleteTask:
         assert response.status_code == 404
         assert response.json()["details"] == "Task not found"
     
-    def test_complete_already_archived_task(self, client: TestClient, sample_task, db_session):
-        from app.service.tasks import TaskService
-        from app.dependencies.tasks import get_task_service
-        
-        service = TaskService(db_session)
-        service.archive_task(sample_task.id)
+    def test_complete_already_archived_task(self, client: TestClient, sample_task, db_session: Session, task_service):
+        task_service.archive_task(sample_task.id)
         
         response = client.post(f"/tasks/{sample_task.id}/complete")
         

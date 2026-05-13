@@ -20,13 +20,8 @@ class TestGetTasksList:
         assert len(data) == len(multiple_tasks)
         
         for task in data:
-            assert "id" in task
-            assert "title" in task
-            assert "description" in task
-            assert "status" in task
-            assert "owner_id" in task
-            assert "created_at" in task
-            assert "updated_at" in task
+            task_valid = TaskResponse(**task)
+            assert task_valid
     
     def test_get_tasks_filter_by_status(self, client: TestClient, multiple_tasks):
         response = client.get("/tasks?status=pending")
@@ -113,10 +108,10 @@ class TestGetTasksList:
         assert len(data) == 2
     
     def test_get_tasks_pagination_offset(self, client: TestClient, multiple_tasks):
-        response1 = client.get("/tasks?limit=2&offset=0")
+        response1 = client.get("/tasks?limit=?&offset=?", params={"limit": 2, "offset": 0})
         data1 = response1.json()
         
-        response2 = client.get("/tasks?limit=2&offset=2")
+        response2 = client.get("/tasks?limit=?&offset=?", params={"limit": 2, "offset": 2})
         data2 = response2.json()
         
         assert len(data1) == 2
@@ -128,7 +123,7 @@ class TestGetTasksList:
         assert ids1.isdisjoint(ids2)
     
     def test_get_tasks_pagination_with_filter(self, client: TestClient, multiple_tasks):
-        response = client.get("/tasks?status=pending&limit=1&offset=0")
+        response = client.get("/tasks?status=?&limit=?&offset=?", params={"status": "pending", "limit": 1, "offset": 0})
         
         assert response.status_code == 200
         data = response.json()
@@ -137,22 +132,22 @@ class TestGetTasksList:
         assert data[0]["status"] == "pending"
     
     def test_get_tasks_invalid_limit_negative(self, client: TestClient):
-        response = client.get("/tasks?limit=-5")
+        response = client.get("/tasks?limit=?", params={"limit": -5})
         
         assert response.status_code == 422
     
     def test_get_tasks_invalid_offset_negative(self, client: TestClient):
-        response = client.get("/tasks?offset=-1")
+        response = client.get("/tasks?offset=?", params={"offset": -1})
         
         assert response.status_code == 422
     
     def test_get_tasks_invalid_sort_by(self, client: TestClient):
-        response = client.get("/tasks?sort_by=invalid_field")
+        response = client.get("/tasks?sort_by=?", params={"sort_by": "invalid_field"})
         
         assert response.status_code == 422
     
     def test_get_tasks_invalid_order(self, client: TestClient):
-        response = client.get("/tasks?order=invalid")
+        response = client.get("/tasks?order=?", params={"order": "invalid_order"})
         
         assert response.status_code == 422
         
@@ -175,11 +170,13 @@ class TestGetTasksSummary:
         assert response.status_code == 200
         data = response.json()
         
-        assert data["total"] == 5
-        assert data["pending"] == 2
-        assert data["in_progress"] == 1
-        assert data["completed"] == 1
-        assert data["archived"] == 1
+        summary = TasksSummary(**data)
+        
+        assert summary.total == 5
+        assert summary.pending == 2
+        assert summary.in_progress == 1
+        assert summary.completed == 1
+        assert summary.archived == 1
     
     def test_get_summary_empty_database(self, client: TestClient, db_session):
         response = client.get("/tasks/summary")
@@ -187,11 +184,13 @@ class TestGetTasksSummary:
         assert response.status_code == 200
         data = response.json()
         
-        assert data["total"] == 0
-        assert data["pending"] == 0
-        assert data["in_progress"] == 0
-        assert data["completed"] == 0
-        assert data["archived"] == 0
+        summary = TasksSummary(**data)
+        
+        assert summary.total == 0
+        assert summary.pending == 0
+        assert summary.in_progress == 0
+        assert summary.completed == 0
+        assert summary.archived == 0
     
     def test_get_summary_after_task_completion(self, client: TestClient, sample_task):
         response1 = client.get("/tasks/summary")

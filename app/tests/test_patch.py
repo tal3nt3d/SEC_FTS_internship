@@ -4,7 +4,6 @@ pytestmark = pytest.mark.api
 
 class TestPatchMissingFields:
     def test_patch_update_only_title_other_fields_unchanged(self, client: TestClient, sample_task):
-        original_title = sample_task.title
         original_description = sample_task.description
         original_status = sample_task.status
         
@@ -17,7 +16,6 @@ class TestPatchMissingFields:
         data = response.json()
         
         assert data["title"] == "Updated Title"
-        assert data["title"] != original_title
         
         assert data["description"] == original_description
         assert data["status"] == original_status

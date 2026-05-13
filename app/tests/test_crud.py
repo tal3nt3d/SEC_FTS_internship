@@ -16,15 +16,17 @@ class TestCreateTask:
         assert response.status_code == 201
         data = response.json()
         
-        assert data["id"] > 0
-        assert data["title"] == "Complete assignment"
-        assert data["description"] == "Finish the pytest configuration"
-        assert data["status"] == "pending"
-        assert data["owner_id"] == sample_user.id
-        assert data["assignee_id"] is None
-        assert "created_at" in data
-        assert "updated_at" in data
-        assert data["closed_at"] is None
+        task = TaskResponse(**data)
+        
+        assert task.id > 0
+        assert task.title == "Complete assignment"
+        assert task.description == "Finish the pytest configuration"
+        assert task.status == "pending"
+        assert task.owner_id == sample_user.id
+        assert task.assignee_id is None
+        assert task.created_at is not None
+        assert task.updated_at is not None
+        assert task.closed_at is None
     
     def test_create_task_with_nonexistent_user(self, client: TestClient):
         response = client.post(
@@ -102,11 +104,13 @@ class TestGetTask:
         assert response.status_code == 200
         data = response.json()
         
-        assert data["id"] == sample_task.id
-        assert data["title"] == sample_task.title
-        assert data["description"] == sample_task.description
-        assert data["status"] == sample_task.status
-        assert data["owner_id"] == sample_task.owner_id
+        task = TaskResponse(**data)
+        
+        assert task.id == sample_task.id
+        assert task.title == sample_task.title
+        assert task.description == sample_task.description
+        assert task.status == sample_task.status
+        assert task.owner_id == sample_task.owner_id
     
     def test_get_nonexistent_task(self, client: TestClient):
         response = client.get("/tasks/99999")

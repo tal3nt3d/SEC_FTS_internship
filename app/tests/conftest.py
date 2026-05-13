@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from app.main import app
 from app.database.database import Base
 from app.service.tasks import TaskService
+from app.repository.tasks import TaskRepository
 
 TEST_DATABASE_URL = "sqlite:///:memory:"
 
@@ -202,6 +203,9 @@ def multiple_tasks(db_session: Session, sample_user) -> List[Dict[str, Any]]:
 def task_service(db_session: Session) -> TaskService:
     return TaskService(db_session)
 
+@pytest.fixture
+def task_repository(db_session: Session) -> TaskRepository:
+    return TaskRepository(db_session)
 
 @pytest.fixture
 def task_service_with_data(db_session: Session, sample_user, multiple_tasks) -> TaskService:
