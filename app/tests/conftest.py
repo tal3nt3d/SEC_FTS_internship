@@ -1,5 +1,6 @@
 import os
 import sys
+from fastapi import Depends
 import pytest
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -7,6 +8,8 @@ from typing import Generator, List, Dict, Any
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
+from app.dependencies.auth import get_current_user
+from app.database.models import User
 
 os.environ["APP_ENV"] = "test"
 
@@ -33,16 +36,8 @@ def db_session(engine) -> Generator[Session, None, None]:
     transaction = connection.begin()
     session = sessionmaker(bind=connection, autocommit=False, autoflush=False)()
 
-    from app.dependencies.tasks import get_task_service
-    
-    def override_get_task_service():
-        return TaskService(session)
-    
-    app.dependency_overrides[get_task_service] = override_get_task_service
-
     yield session
 
-    app.dependency_overrides.clear()
     session.close()
     transaction.rollback()
     connection.close()
@@ -50,30 +45,39 @@ def db_session(engine) -> Generator[Session, None, None]:
 
 @pytest.fixture
 def client(db_session) -> Generator[TestClient, None, None]:
+    from app.dependencies.database import get_db 
+
+    def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
     with TestClient(app) as test_client:
         yield test_client
+
+    app.dependency_overrides.clear()
+
 
 @pytest.fixture
 def sample_user(db_session: Session):
     from app.database.models import User
     
-    user = User(username="test_user", password="hashed_password")
+    user = User(username="test_user", password="hashed_password", role="user", is_active=True)
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
+    
     return user
-
 
 @pytest.fixture
 def sample_assignee(db_session: Session):
     from app.database.models import User
     
-    user = User(username="assignee_user", password="hashed_password")
+    user = User(username="assignee_user", password="hashed_password", role="user", is_active=True)
     db_session.add(user)
     db_session.commit()
     db_session.refresh(user)
     return user
-
 
 @pytest.fixture
 def multiple_users(db_session: Session) -> List[Dict[str, Any]]:
@@ -81,7 +85,7 @@ def multiple_users(db_session: Session) -> List[Dict[str, Any]]:
     
     users = []
     for i in range(3):
-        user = User(username=f"user_{i}", password=f"pass_{i}")
+        user = User(username=f"user_{i}", password=f"pass_{i}", role="user", is_active=True)
         db_session.add(user)
         users.append({"id": None, "username": f"user_{i}"})
     
@@ -189,7 +193,7 @@ def multiple_tasks(db_session: Session, sample_user) -> List[Dict[str, Any]]:
             updated_at=datetime.now()
         )
         db_session.add(task)
-        tasks.append({"title": title, "status": status})
+        tasks.append({"title": title, "status": status, "owner_id": owner_id})
     
     db_session.commit()
     
@@ -200,14 +204,72 @@ def multiple_tasks(db_session: Session, sample_user) -> List[Dict[str, Any]]:
     return tasks
 
 @pytest.fixture
-def task_service(db_session: Session) -> TaskService:
-    return TaskService(db_session)
+def task_service(db_session: Session, sample_user) -> TaskService:
+    return TaskService(db_session, sample_user)
 
 @pytest.fixture
 def task_repository(db_session: Session) -> TaskRepository:
     return TaskRepository(db_session)
 
 @pytest.fixture
-def task_service_with_data(db_session: Session, sample_user, multiple_tasks) -> TaskService:
-    service = TaskService(db_session)
+def task_service_with_data(db_session: Session, sample_user) -> TaskService:
+    service = TaskService(db_session, sample_user)
     return service
+
+@pytest.fixture
+def admin_user(db_session: Session):
+    from app.database.models import User
+    
+    admin = User(
+        username="admin_user", 
+        password="admin_hash",
+        role="admin",
+        is_active=True
+    )
+    db_session.add(admin)
+    db_session.commit()
+    db_session.refresh(admin)
+    
+    return admin
+
+@pytest.fixture
+def other_user(db_session: Session):
+    from app.database.models import User
+    
+    user = User(
+        username="other_user", 
+        password="other_hash",
+        role="user",
+        is_active=True
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    
+    return user
+
+@pytest.fixture
+def sample_task_other_owner(db_session: Session, other_user):
+    
+    from app.database.models import Task
+    
+    task = Task(
+        title="Other User Task",
+        description="Task owned by other user",
+        status="pending",
+        owner_id=other_user.id,
+        created_at=datetime.now(),
+        updated_at=datetime.now()
+    )
+    db_session.add(task)
+    db_session.commit()
+    db_session.refresh(task)
+    return task
+
+@pytest.fixture
+def auth_client(client):
+    def _get_auth_client(user_id: int):
+        client.headers.update({"Authorization": f"Bearer stub_{user_id}"})
+        return client
+    
+    return _get_auth_client

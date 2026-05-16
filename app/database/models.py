@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, ForeignKey, DateTime, CheckConstraint, Index
+from sqlalchemy import Integer, String, ForeignKey, DateTime, CheckConstraint, Index, Boolean
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
 from .database import Base
@@ -59,6 +59,8 @@ class User(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     username: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     password: Mapped[str] = mapped_column(String, nullable=False)
+    role: Mapped[str] = mapped_column(String, nullable=False, default="user")
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     
     comments: Mapped[List["Comment"]] = relationship("Comment", back_populates="user", cascade="all, delete-orphan")
     owned_tasks: Mapped[List["Task"]] = relationship("Task", foreign_keys="Task.owner_id", back_populates="owner", cascade="all, delete-orphan")

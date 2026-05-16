@@ -24,6 +24,9 @@ test-history:
 test-export:
 	@APP_ENV=test pytest -m export -v
 
+test-auth:
+	@APP_ENV=test pytest -m auth -v
+
 # список маркеров
 test-markers:
 	@APP_ENV=test pytest --markers
