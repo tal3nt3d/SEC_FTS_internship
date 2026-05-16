@@ -76,7 +76,11 @@ class TaskRepository:
         task_history = self.db.query(TaskHistory).filter(TaskHistory.task_id == task_id).order_by(TaskHistory.changed_at.desc()).all()
         return task_history
     
-    def get_summary(self):
-        sql = """ SELECT status, COUNT(*) as count FROM tasks GROUP BY status """
-        result = self.db.execute(text(sql))
+    def get_summary(self, user_id: int = None):
+        if user_id:
+            sql = " SELECT status, COUNT(*) as count FROM tasks WHERE owner_id = :user_id GROUP BY status "
+            result = self.db.execute(text(sql), {"user_id": user_id})
+        else:
+            sql = " SELECT status, COUNT(*) as count FROM tasks GROUP BY status "
+            result = self.db.execute(text(sql))
         return result.fetchall()

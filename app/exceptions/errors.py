@@ -31,4 +31,8 @@ class TaskAlreadyArchivedError(AppException):
     """Raised when trying to archive already archived task."""
     def __init__(self, detail: str = "Task has been already archived"):
         super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
+        
+class PermissionDeniedError(AppException):
+    def __init__(self, message: str = "Permission denied"):
+        super().__init__(status_code=403, detail=message)
     

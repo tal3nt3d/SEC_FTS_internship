@@ -1,4 +1,4 @@
-from app.exceptions.errors import TaskNotFoundError, TaskAlreadyCompletedError, TaskAlreadyArchivedError, UserNotFoundError
+from app.exceptions.errors import TaskNotFoundError, TaskAlreadyCompletedError, TaskAlreadyArchivedError, UserNotFoundError, PermissionDeniedError
 from app.schemas.tasks import TaskCreate, TaskResponse, TaskUpdate, TaskFilter, TasksSummary, TaskHistoryResponse
 from datetime import datetime
 import csv
@@ -9,9 +9,15 @@ from app.repository.users import UserRepository
 from app.database.models import Task, TaskHistory
 
 class TaskService:
-    def __init__(self, db: Session):
+    def __init__(self, db: Session, current_user):
         self.repo = TaskRepository(db)
         self.user_repo = UserRepository(db)
+        self.current_user = current_user
+    
+    def check_owner_or_admin(self, task: Task):
+        if self.current_user.id == task.owner_id or self.current_user.role == "admin":
+            return True
+        raise PermissionDeniedError
     
     def get_tasks(self, filters: TaskFilter):
         tasks = self.repo.get_all(
@@ -20,6 +26,10 @@ class TaskService:
             sort_by=filters.sort_by, 
             order=filters.order
         )
+        if self.current_user.role != "admin":
+            tasks = [task for task in tasks if task.owner_id == self.current_user.id]
+            if filters.user_id and filters.user_id != self.current_user.id:
+                tasks = []
         start = filters.offset
         end = start + filters.limit
         paginated_tasks = tasks[start:end]
@@ -31,6 +41,8 @@ class TaskService:
             raise UserNotFoundError()
 
     def create_task(self, owner_id: int, task_data: TaskCreate):
+        if owner_id != self.current_user.id and self.current_user.role != "admin":
+            raise PermissionDeniedError
         self.is_user_exists(owner_id)
         task = self.repo.create_task(owner_id, task_data)
         return TaskResponse.model_validate(task)
@@ -39,6 +51,7 @@ class TaskService:
         task = self.repo.get_task(task_id)
         if not task:
             raise TaskNotFoundError()
+        self.check_owner_or_admin(task)
         return task
 
     def get_task_by_id(self, task_id: int):
@@ -80,12 +93,15 @@ class TaskService:
     def assignee_task(self, task_id: int, user_id: int):
         task_db = self.get_task_or_404(task_id)
         self.is_complete(task_db)
+        if user_id != self.current_user.id:
+            raise PermissionDeniedError
         self.is_user_exists(user_id)
         task = self.repo.assign_task(task_db, user_id)
         return TaskResponse.model_validate(task)
     
     def get_summary(self):
-        db_summary = self.repo.get_summary()
+        user_id = None if self.current_user.role == "admin" else self.current_user.id
+        db_summary = self.repo.get_summary(user_id=user_id)
         summary = TasksSummary(
             total=sum(row[1] for row in db_summary),
             pending=sum(row[1] for row in db_summary if row[0] == "pending"),
@@ -123,6 +139,7 @@ class TaskService:
                     field_name=field,
                     old_value=str(old) if old is not None else None,
                     new_value=str(new) if new is not None else None,
+                    changed_by=self.current_user.id
                 )
                 self.repo.db.add(history)
         
@@ -131,6 +148,7 @@ class TaskService:
     from app.schemas.tasks import TaskHistoryResponse
 
     def get_task_history(self, task_id: int):
+        self.get_task_or_404(task_id)
         history = self.repo.get_task_history(task_id)
         if history == []:
             raise TaskNotFoundError()
